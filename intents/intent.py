@@ -37,7 +37,7 @@ def classify_chat_intent(message):
     return llm_utils.run_llm(prompt, "gpt-4o", json_format=True)
 
 
-def handle_intent(intent, message):
+def route_intent(intent, message):
 
     if intent == Intent.WORKOUT.value:
         print("Matched WORKOUT intent")

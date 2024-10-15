@@ -43,6 +43,7 @@ def sms_reply():
     try:
         message = intents.handle_intent(intent, incoming_msg)
         print(f"Message: {message}")
+        
     except Exception as e:
         print(f"Error handling intent: {e}")
         message = "I'm sorry, I don't know how to help with that. Can you please rephrase?"
