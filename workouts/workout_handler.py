@@ -10,7 +10,7 @@ dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-def convert_message_to_exercise_schema(user_message):
+def _convert_message_to_exercise_schema(user_message):
     completion = client.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
@@ -37,9 +37,9 @@ def test():
     # db_ops.add_workout(workout)
 
     # add exercise set
-    e1 = convert_message_to_exercise_schema("I did 3 sets of 10 reps of bench press with 100lbs")
+    e1 = _convert_message_to_exercise_schema("I did 3 sets of 10 reps of bench press with 100lbs")
     print(e1)
-    db_ops.add_exercise_set(e1)
+    db_ops.add_exercise_set(e1, workout_id=1)
 
     # e2 = convert_message_to_exercise_schema("Bulgarian split squat 3x12 25kg")
     # db_ops.add_exercise_set(workout_id=1, exercise_set_id=1, exercise_id=1, reps=10, weight=100)

@@ -1,18 +1,17 @@
 from sqlalchemy.orm import sessionmaker
-from .db_setup import engine
 from workouts.workout_schema import ExerciseSet, Workout
 from database.models import ExerciseSet as SQLExerciseSet, Workout as SQLWorkout, User as SQLUser
 
-# Create a configured "Session" class
-Session = sessionmaker(bind=engine)
+from database.db_setup import init_db, Session, engine  # Import Session and engine
+init_db()
 
 # 
 # Add operations
 # 
-def add_user(uuid, name, phone_number, email=None):
+def add_user(user_id, name, phone_number, email=None):
     session = Session()
     try:
-        new_user = SQLUser(uuid=uuid, name=name, phone_number=phone_number, email=email)
+        new_user = SQLUser(uuid=user_id, name=name, phone_number=phone_number, email=email)
         session.add(new_user)
         session.commit()
     except Exception as e:
@@ -35,10 +34,13 @@ def add_workout(pydantic_workout: Workout):
         session.close()
 
 
-def add_exercise_set(pydantic_exercise_set: ExerciseSet):
+def add_exercise_set(pydantic_exercise_set: ExerciseSet, workout_id: int):
     session = Session()
     try:
-        new_exercise_set = convert_exercise_set(pydantic_exercise_set)
+        new_exercise_set = convert_exercise_set(pydantic_exercise_set, workout_id=workout_id)
+        print("created sqlalchemy exercise set")
+        print(new_exercise_set)
+
         session.add(new_exercise_set)
         session.commit()
     except Exception as e:
@@ -64,8 +66,9 @@ def get_all_users():
 # Convert operations
 # 
 
-def convert_exercise_set(pydantic_exercise_set: ExerciseSet) -> SQLExerciseSet:
+def convert_exercise_set(pydantic_exercise_set: ExerciseSet, workout_id: int) -> SQLExerciseSet:
     return SQLExerciseSet(
+        workout_id=workout_id,
         name=pydantic_exercise_set.name,
         sets=pydantic_exercise_set.sets,
         reps=pydantic_exercise_set.reps,
@@ -80,14 +83,14 @@ def convert_workout(workout: Workout) -> SQLWorkout:
     
     # Create the SQLAlchemy Workout
     sqlalchemy_workout = SQLWorkout(
-        user_uuid=workout.user_uuid,
+        user_id=workout.user_id,
         date=workout.date,
         status=workout.status.value,
         notes=workout.notes,
     )
     
     # Add exercise sets to the workout
-    exercise_sets = [convert_exercise_set(ex) for ex in workout.exercises]
+    exercise_sets = [convert_exercise_set(ex, sqlalchemy_workout.id) for ex in workout.exercises]
     sqlalchemy_workout.exercises = exercise_sets
     
     return sqlalchemy_workout
