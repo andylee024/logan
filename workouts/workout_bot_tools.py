@@ -5,12 +5,41 @@ import os
 import database.db_operations as db_ops
 import workout_schema
 
-
 dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-def _convert_message_to_exercise_schema(user_message):
+# 
+# workout getters
+#
+def get_most_likely_workout(user_session_info):
+    """Gets the most likely workout based on the user session info."""
+    pass
+
+def get_workouts_for_week(user_session_info):
+    """Gets the workouts for the user by week."""
+    pass
+
+# 
+# handle workout state
+# 
+def handle_workout_start(user_session_info, workout_id):
+    """Start workout and handle all required flows"""
+    pass
+
+def handle_workout_end(user_session_info, workout_id):
+    """End workout and handle all required flows."""
+    pass
+
+def log_exercise_set(user_message, workout_id):
+    """Log a set for a workout."""
+    pass
+
+
+# 
+# converters
+#  
+def convert_message_to_exercise_schema(user_message):
     completion = client.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
@@ -37,7 +66,7 @@ def test():
     # db_ops.add_workout(workout)
 
     # add exercise set
-    e1 = _convert_message_to_exercise_schema("I did 3 sets of 10 reps of bench press with 100lbs")
+    e1 = convert_message_to_exercise_schema("I did 3 sets of 10 reps of bench press with 100lbs")
     print(e1)
     db_ops.add_exercise_set(e1, workout_id=1)
 
