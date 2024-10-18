@@ -8,7 +8,6 @@ import workout_schema
 dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-
 # 
 # workout getters
 #
@@ -34,7 +33,6 @@ def handle_workout_end(user_session_info, workout_id):
 def log_exercise_set(user_message, workout_id):
     """Log a set for a workout."""
     pass
-
 
 # 
 # converters
