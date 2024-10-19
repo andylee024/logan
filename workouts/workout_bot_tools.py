@@ -3,21 +3,32 @@ import openai
 import os
 
 import database.db_operations as db_ops
-import workout_schema
+from workout_schema import ExerciseSet, Workout
 
 dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+
 
 # 
 # workout getters
 #
 def get_most_likely_workout(user_session_info):
     """Gets the most likely workout based on the user session info."""
-    pass
+    user_uuid = user_session_info.get("user_uuid", "+16263102445")
+    date = user_session_info.get("date", "2024-08-01")
+
+    workout = Workout(date=date, 
+                      user_uuid=user_uuid, 
+                      status="not_started", 
+                      notes="")
+    
+    return str(workout)
 
 def get_workouts_for_week(user_session_info):
     """Gets the workouts for the user by week."""
-    pass
+    workouts = []
+    return workouts
 
 # 
 # handle workout state
