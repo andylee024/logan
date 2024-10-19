@@ -1,14 +1,6 @@
 
-class WORKOUT_TOOLS:
-    @property
-    def get_most_likely_workout(self):
-        return get_most_likely_workout_tool
 
-    @property
-    def get_workouts_for_week(self):
-        return get_workouts_for_week_tool
-
-get_most_likely_workout_tool = {
+get_most_likely_workout_tool_descriptor = {
     "type": "function",
     "function": {
         "name": "get_most_likely_workout",
@@ -31,7 +23,7 @@ get_most_likely_workout_tool = {
     }
 }
 
-get_workouts_for_week_tool = {
+get_workouts_for_week_tool_descriptor = {
     "type": "function",
     "function": {
         "name": "get_workouts_for_week",

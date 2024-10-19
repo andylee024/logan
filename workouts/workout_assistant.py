@@ -5,56 +5,10 @@ import traceback
 import json
 
 from workout_bot_tools import get_most_likely_workout, get_workouts_for_week
-from tool_descriptors import WORKOUT_TOOLS
+import tool_descriptors 
 
 dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-get_most_likely_workout_tool = {
-    "type": "function",
-    "function": {
-        "name": "get_most_likely_workout",
-        "description": "Get the most likely workout for a user based on session info",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
-            },
-            "required": ["user_session_info"]
-        }
-    }
-}
-
-get_workouts_for_week_tool = {
-    "type": "function",
-    "function": {
-        "name": "get_workouts_for_week",
-        "description": "Get the workouts for a user for the week based on session info",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
-            },
-            "required": ["user_session_info"]
-        }
-    }
-}
 
 # Setup for bot 
 class WORKOUT_BOT_CONFIG:
@@ -66,7 +20,7 @@ class WORKOUT_BOT_CONFIG:
 
     @property
     def tools(self):
-        return [WORKOUT_TOOLS.get_most_likely_workout, WORKOUT_TOOLS.get_workouts_for_week]
+        return 
     
     @property
     def model(self):
@@ -77,9 +31,10 @@ def chat_with_workout_bot():
     # setup assistant
     config = WORKOUT_BOT_CONFIG()
     assistant = client.beta.assistants.create(
-        instructions="You are a workout assistant. Use the provided functions to answer questions.",
-        model="gpt-4o",
-        tools=[get_most_likely_workout_tool, get_workouts_for_week_tool]
+        instructions=config.description,
+        model=config.model,
+        tools=[tool_descriptors.get_most_likely_workout_tool_descriptor, 
+               tool_descriptors.get_workouts_for_week_tool_descriptor]
     )
 
     thread = client.beta.threads.create()
@@ -107,12 +62,9 @@ def chat_with_workout_bot():
 
         # check if run is completed
         if run.status == "completed":
-            messages = client.beta.threads.messages.list(thread_id=thread.id)
+            bot_response = _retrieve_bot_response(thread.id, client)
+            print(f"\n Bot: {bot_response} \n ")
 
-            for idx, message in enumerate(messages):
-                for content_block in message.content:
-                    if content_block.type == "text":
-                        print(f"Bot {idx}:", content_block.text.value)
 
         else:
             print("RUN STATUS:", run.status)
@@ -171,63 +123,27 @@ def chat_with_workout_bot():
                 print("No tool outputs to submit.")
 
             if run.status == 'completed':
-                messages = client.beta.threads.messages.list(
-                    thread_id=thread.id
-                )
-                print(messages)
+                bot_response = _retrieve_bot_response(thread.id, client)
+                print(f"\n Bot: {bot_response} \n")
 
             else:
                 print(run.status)
 
 
 
+def _retrieve_bot_response(thread_id, client):
+    messages = client.beta.threads.messages.list(thread_id, limit=1)
+    messages_iter = iter(messages)
+    most_recent_message = next(messages_iter, None)
+
+    if not most_recent_message:
+        return None
+
+    for content_block in most_recent_message.content:
+        if content_block.type == "text":
+            return content_block.text.value
+    
+
+
 if __name__ == "__main__":
     chat_with_workout_bot()
-
-
-"""
-get_most_likely_workout_tool = {
-    "type": "function",
-    "function": {
-        "name": "get_most_likely_workout",
-        "description": "Get the most likely workout for a user based on session info",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
-            },
-            "required": ["user_session_info"]
-        }
-    }
-}
-
-get_workouts_for_week_tool = {
-    "type": "function",
-    "function": {
-        "name": "get_workouts_for_week",
-        "description": "Get the workouts for a user for the week based on session info",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
-            },
-            "required": ["user_session_info"]
-        }
-    }
-}"""
