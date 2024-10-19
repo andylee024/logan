@@ -24,7 +24,7 @@ class ExerciseSet(BaseModel):
 
 
 class Workout(BaseModel):
-    user_uuid: str
+    user_id: str
     date: str
     status: Status = Field(default=Status.not_started, description="Status of the workout")
 

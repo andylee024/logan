@@ -4,7 +4,7 @@ import os
 import traceback
 import json
 
-from workout_bot_tools import get_most_likely_workout, get_workouts_for_week
+from workout_bot_tools import get_all_workouts
 import tool_descriptors 
 
 dotenv.load_dotenv()
@@ -33,8 +33,7 @@ def chat_with_workout_bot():
     assistant = client.beta.assistants.create(
         instructions=config.description,
         model=config.model,
-        tools=[tool_descriptors.get_most_likely_workout_tool_descriptor, 
-               tool_descriptors.get_workouts_for_week_tool_descriptor]
+        tools=[tool_descriptors.get_all_workouts_tool_descriptor]
     )
 
     thread = client.beta.threads.create()
@@ -88,21 +87,19 @@ def chat_with_workout_bot():
                         # Parse the arguments from JSON string to dictionary
                         arguments = json.loads(tool.function.arguments)
                         
-                        tool_outputs.append({
-                            "tool_call_id": tool.id,
-                            "output": get_most_likely_workout(arguments)
-                        })
 
-                        print("TOOL OUTPUTS:", tool_outputs)
+                    elif tool.function.name == "get_all_workouts":
+                        print("AI requested get_most_likely_workout()")
+                        print("AI generated arguments:", tool.function.arguments)
 
-                    elif tool.function.name == "get_workouts_for_week":
                         # Parse the arguments from JSON string to dictionary
                         arguments = json.loads(tool.function.arguments)
                         
                         tool_outputs.append({
                             "tool_call_id": tool.id,
-                            "output": get_workouts_for_week(arguments)
+                            "output": get_all_workouts(arguments)
                         })
+                        
 
                         print("TOOL OUTPUTS:", tool_outputs)
 

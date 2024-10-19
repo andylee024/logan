@@ -1,48 +1,16 @@
 
-
-get_most_likely_workout_tool_descriptor = {
+get_all_workouts_tool_descriptor = {
     "type": "function",
     "function": {
-        "name": "get_most_likely_workout",
-        "description": "Get the most likely workout for a user based on session info",
+        "name": "get_all_workouts",
+        "description": "Get all workouts for a user based on session info",
         "parameters": {
             "type": "object",
             "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
+                "user_id": {"type": "string", "description": "The ID of the user"},
+                "date": {"type": "string", "format": "date", "description": "The date for which to retrieve workouts"}
             },
-            "required": ["user_session_info"]
+            "required": ["user_id", "date"]
         }
     }
 }
-
-get_workouts_for_week_tool_descriptor = {
-    "type": "function",
-    "function": {
-        "name": "get_workouts_for_week",
-        "description": "Get the workouts for a user for the week based on session info",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "user_session_info": {
-                    "type": "object",
-                    "description": "Information about the user's session, including user_uuid and date",
-                    "properties": {
-                        "user_uuid": {"type": "string"},
-                        "date": {"type": "string", "format": "date"}
-                    },
-                    "required": ["user_uuid", "date"]
-                }
-            },
-            "required": ["user_session_info"]
-        }
-    }
-}
-
