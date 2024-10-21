@@ -5,6 +5,10 @@ from database.models import ExerciseSet as SQLExerciseSet, Workout as SQLWorkout
 from database.db_setup import init_db, Session, engine  # Import Session and engine
 init_db()
 
+def _row_to_dict(row):
+    """Converts a SQLAlchemy row to a dictionary."""
+    return {column.name: getattr(row, column.name) for column in row.__table__.columns}
+
 # 
 # Add operations
 # 
@@ -34,12 +38,10 @@ def add_workout(pydantic_workout: Workout):
         session.close()
 
 
-def add_exercise_set(pydantic_exercise_set: ExerciseSet, workout_id: int):
+def add_exercise_set(pydantic_exercise_set: ExerciseSet):
     session = Session()
     try:
-        new_exercise_set = convert_exercise_set(pydantic_exercise_set, workout_id=workout_id)
-        print("created sqlalchemy exercise set")
-        print(new_exercise_set)
+        new_exercise_set = convert_exercise_set(pydantic_exercise_set)
 
         session.add(new_exercise_set)
         session.commit()
@@ -52,6 +54,16 @@ def add_exercise_set(pydantic_exercise_set: ExerciseSet, workout_id: int):
 #
 # Get operations
 # 
+def get_workouts_for_user(user_id: str):
+    session = Session()
+    try:
+        workouts = session.query(SQLWorkout).filter(SQLWorkout.user_id == user_id).all()
+        return [_row_to_dict(w) for w in workouts]
+    except Exception as e:
+        print(f"Error getting workouts for user: {e}")
+    finally:
+        session.close()
+
 
 def get_all_users():
     session = Session()
@@ -94,3 +106,10 @@ def convert_workout(workout: Workout) -> SQLWorkout:
     sqlalchemy_workout.exercises = exercise_sets
     
     return sqlalchemy_workout
+
+def test():
+    workouts = get_workouts_for_user("+18577021834")
+    print(workouts)
+
+if __name__ == "__main__":
+    test()

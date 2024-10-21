@@ -2,60 +2,57 @@ import dotenv
 import openai
 import os
 
+from datetime import datetime, timedelta
+
 import database.db_operations as db_ops
 import workout_schema
-from workout_schema import ExerciseSet, Workout
 
 dotenv.load_dotenv()
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-
 # 
 # workout getters
 #
+def _get_week_start_and_end_dates(date):
+    """Gets the start and end dates for the current week."""
+    reference_date = datetime.strptime(date, "%Y-%m-%d")
+    start_date = reference_date - timedelta(days=reference_date.weekday())
+    end_date = start_date + timedelta(days=6)
+    return start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")
+
+
+def get_this_weeks_workouts(user_session_info):
+    """Gets all workouts for a user in the current week."""
+    user_id = user_session_info.get("user_id")
+    user_workouts = db_ops.get_workouts_for_user(user_id)
+
+    user_date = user_session_info.get("date")
+    start_date, end_date = _get_week_start_and_end_dates(user_date)
+    start_date_dt = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date_dt = datetime.strptime(end_date, "%Y-%m-%d")
+
+    filtered_workouts = [
+        w for w in user_workouts
+        if start_date_dt <= datetime.strptime(w['date'], "%Y-%m-%d") <= end_date_dt
+    ]
+    return filtered_workouts
+
 def get_most_likely_workout(user_session_info):
-    """Gets the most likely workout based on the user session info."""
-    user_uuid = user_session_info.get("user_uuid", "+16263102445")
-    date = user_session_info.get("date", "2024-08-01")
-    workouts = db_ops.get_workouts_for_user(user_uuid)
-    return workouts
+    """Gets the most likely workout for a user."""
+    workouts = get_this_weeks_workouts(user_session_info)
+    workouts = [w for w in workouts if w['status'] == 'not_started']
+
+    user_date = datetime.strptime(user_session_info['date'], "%Y-%m-%d")
+    workouts.sort(key=lambda w: abs(datetime.strptime(w['date'], "%Y-%m-%d") - user_date))
+    return workouts[0]
 
 
-def get_all_workouts(user_session_info):
-    """Gets all workouts for a user."""
-
-    def _convert_workouts_to_json(workout):
-        return {"user_id": workout.user_id,
-         "workout_id": workout.id,
-         "date": workout.date,
-         "status": workout.status,
-         "notes": workout.notes}
-    
-    try:
-        user_id = user_session_info.get("user_id")
-        workouts = db_ops.get_workouts_for_user(user_id)
-        return str([_convert_workouts_to_json(w) for w in workouts])
-
-    except Exception as e:
-        print(f"Cannot retrieve workouts for user: {e}")
-        return []
-
-# 
-# handle workout state
-# 
-def handle_workout_start(user_session_info, workout_id):
-    """Start workout and handle all required flows"""
-    pass
-
-def handle_workout_end(user_session_info, workout_id):
-    """End workout and handle all required flows."""
-    pass
-
-def log_exercise_set(user_message, workout_id):
+def log_exercise_set(data):
     """Log a set for a workout."""
-    exercise_set = convert_message_to_exercise_schema(user_message)
-    db_ops.add_exercise_set(exercise_set, workout_id)
-    pass
+    exercise_set = convert_message_to_exercise_schema(data['user_message'])
+    print(f"logging exercise set for workout id:  {data['workout_id']}")
+    print(f"exercise_set: {exercise_set}")
+    # db_ops.add_exercise_set(exercise_set, data['workout_id'])
 
 # 
 # converters
@@ -73,21 +70,9 @@ def convert_message_to_exercise_schema(user_message):
 
 
 def test():
-
-    # add user
-    # db_ops.add_user(user_id="+447470774593", 
-    #                 name="Andy", 
-    #                 phone_number="+447470774593", 
-    #                 email="drifter24@gmail.com")
-
-    # get workout 
-    user_session_info = {'user_id': "+18577021834", 'date':"2024-08-01"}
-    workouts = get_all_workouts(user_session_info)
+    user_session_info = {'user_id': "+18577021834", 'date':"2024-10-21"}
+    workouts = get_most_likely_workout(user_session_info)
     print(workouts)
-
-    # add exercise set
-    # e1 = convert_message_to_exercise_schema("I did 3 sets of 10 reps of bench press with 100lbs")
-    # db_ops.add_exercise_set(e1, workout_id=1)
 
 
 if __name__ == "__main__":

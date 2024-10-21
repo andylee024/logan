@@ -27,6 +27,8 @@ class Workout(BaseModel):
     user_id: str
     date: str
     status: Status = Field(default=Status.not_started, description="Status of the workout")
-
     exercises: List[ExerciseSet] = Field(default_factory=list, description="List of exercises in the workout") 
     notes: Optional[str] = Field(default=None, description="Additional notes about the workout")
+
+    def __str__(self):
+        return f"Workout(user_id={self.user_id}, date={self.date}, status={self.status}, exercises={self.exercises}, notes={self.notes})"
